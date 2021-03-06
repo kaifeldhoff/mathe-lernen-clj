@@ -1,7 +1,8 @@
 (ns einspluseins.core
   (:require
-   [reagent.dom :as rd]
+   [reagent.dom :as rdom]
    [re-frame.core :as rf]
+   [re-pressed.core :as rp]
    [einspluseins.events :as events]
    [einspluseins.views :as views]
    [einspluseins.config :as config]
@@ -13,10 +14,12 @@
 
 (defn ^:dev/after-load mount-root []
   (rf/clear-subscription-cache!)
-  (rd/render [views/main-panel]
-                  (.getElementById js/document "app")))
+  (let [root-el (.getElementById js/document "app")]
+    (rdom/unmount-component-at-node root-el)
+    (rdom/render [views/main-panel] root-el)))
 
 (defn init []
   (rf/dispatch-sync [::events/initialize-db])
+  (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
   (dev-setup)
   (mount-root))

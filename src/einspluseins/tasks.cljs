@@ -90,15 +90,15 @@
           (let [add-10th (* 10 add)]
             {:op + :n1 (+ n1 add-10th) :n2 n2})))))))
 
-#_(def raw-levels [{:to-solve 5 :create-fn range-10-add-1}
-                 {:to-solve 5 :create-fn range-10-sub-1}
-                 {:to-solve 5 :create-fn range-10-add-any}
-                 {:to-solve 5 :create-fn range-11-20-add-0-9+10}
-                 {:to-solve 6 :create-fn range-11-20-add-1-9-then+1}
-                 {:to-solve 5 :create-fn range-10-19-add-1-9}
-                 {:to-solve 5 :create-fn range-10-90-add-10th}
-                 {:to-solve 6 :create-fn range-9-add-any-then-10th}
-                 {:to-solve 1 :create-fn (fn [_] nil)}])
+(def kres-raw-levels [{:to-solve 5 :create-fn range-10-add-1}
+                      {:to-solve 5 :create-fn range-10-sub-1}
+                      {:to-solve 5 :create-fn range-10-add-any}
+                      {:to-solve 5 :create-fn range-11-20-add-0-9+10}
+                      {:to-solve 6 :create-fn range-11-20-add-1-9-then+1}
+                      {:to-solve 5 :create-fn range-10-19-add-1-9}
+                      {:to-solve 5 :create-fn range-10-90-add-10th}
+                      {:to-solve 6 :create-fn range-9-add-any-then-10th}
+                      {:to-solve 1 :create-fn (fn [_] nil)}])
 
 ;; Kjell
 
@@ -129,18 +129,34 @@
      (let [[n1' n2'] (shuffle [n1 n2])]
        [{:op * :n1 n1' :n2 n2'}]))))
 
-(comment
-  (range 1 6)
-  
-  )
+(defn multi-range-1-5
+  "multiply range 1 to 5"
+  []
+  (vec
+   (for [n1 (range 1 6)
+         n2 (range 1 6)]
+     (let [[n1' n2'] (shuffle [n1 n2])]
+       [{:op * :n1 n1' :n2 n2'}]))))
+
+(defn multi-range-6-10-no100
+  "multiply range 6 to 10 no 100"
+  []
+  (vec
+   (for [n1 (range 6 11)
+         n2 (range 6 11)]
+     (let [[n1' n2'] (shuffle [n1 n2])]
+       (when-not (= 10 n1' n2')
+         [{:op * :n1 n1' :n2 n2'}])))))
 
 
-(def raw-levels [{:to-solve 3 :create-fn multi-1-and-5-range-1-5}
-                 {:to-solve 3 :create-fn multi-1-and-5-range-6-10}
-                 {:to-solve 3 :create-fn multi-1-and-5-range-1-10}
-                 ])
+(def kjell-raw-levels [{:to-solve 5 :create-fn multi-1-and-5-range-1-5}
+                       {:to-solve 5 :create-fn multi-1-and-5-range-6-10}
+                       {:to-solve 5 :create-fn multi-1-and-5-range-1-10}
+                       {:to-solve 10 :create-fn multi-range-1-5}
+                       {:to-solve 10 :create-fn multi-range-6-10-no100}])
 
-(def levels (into {} (map vector (iterate inc 1) raw-levels)))
+(def levels-per-user {:Kjell (into {} (map vector (iterate inc 1) kjell-raw-levels))
+                      :Kres (into {} (map vector (iterate inc 1) kres-raw-levels))})
 
 (defn solve [task]
   (let [op (task :op)
@@ -153,10 +169,9 @@
         integer-answer (js/parseInt answer)]
     (= integer-answer solution)))
 
-(defn set-next-task [{:keys [remaining-tasks current-level to-solve] :as db}]
-  (let [new-to-solve (dec to-solve)
-        remaining-task-lists-of-level (remaining-tasks current-level)
-        db (assoc db :to-solve new-to-solve)]
+(defn set-next-task [{:keys [remaining-tasks current-level levels to-solve] :as db}]
+  (let [remaining-task-lists-of-level (remaining-tasks current-level)
+        db (update db :to-solve dec)]
     (if (= 1 (count (peek remaining-task-lists-of-level)))
       (if (empty? (pop remaining-task-lists-of-level))
         (let [{:keys [:create-fn]} (levels current-level)
@@ -165,10 +180,11 @@
         (update-in db [:remaining-tasks current-level] (comp shuffle pop)))
       (update-in db [:remaining-tasks current-level] #(conj (pop %) (pop (peek %)))))))
 
-(defn set-next-level [{:keys [current-level] :as db}]
+(defn set-next-level [{:keys [current-level levels] :as db}]
   (let [next-level (inc current-level)
         {:keys [:to-solve :create-fn]} (levels next-level)
-        tasks (shuffle (vec (create-fn)))]
+        tasks (when create-fn
+                (shuffle (vec (create-fn))))]
     (-> db
         (assoc :current-level next-level)
         (assoc-in [:remaining-tasks next-level] tasks)
@@ -180,7 +196,7 @@
     (set-next-level db)
     (set-next-task db)))
 
-(defn process-wrong-answer [{:keys [current-level audio] :as db}]
+(defn process-wrong-answer [{:keys [current-level levels audio] :as db}]
   (audio/play-try-again audio)
   (let [total-tasks (get-in levels [current-level :to-solve])]
   (-> db

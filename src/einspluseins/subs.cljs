@@ -1,6 +1,6 @@
 (ns einspluseins.subs
   (:require [re-frame.core :as rf]
-            [einspluseins.tasks :refer [levels task->str]]
+            [einspluseins.tasks :refer [levels-per-user task->str]]
             #_[cljs.pprint :as pprint]))
 
 (rf/reg-sub
@@ -24,7 +24,8 @@
 (rf/reg-sub
  ::total-tasks
  :<- [::current-level]
- (fn [current-level _]
+ :<- [::levels]
+ (fn [[current-level levels] _]
    (get-in levels [current-level :to-solve])))
 
 (rf/reg-sub
@@ -48,6 +49,11 @@
    (db :current-level)))
 
 (rf/reg-sub
+ ::levels
+ (fn [db]
+   (db :levels)))
+
+(rf/reg-sub
  ::show-start-modal
  (fn [db]
    (db :show-start-modal)))
@@ -58,16 +64,6 @@
    db))
 
 (comment
-
-  (-> @(rf/subscribe [::current-task]))
-  ;; => ("4" "+" "2")
-
-  ;; => ("1" "+" "6")
-
-
-
-
-
 
    
   
