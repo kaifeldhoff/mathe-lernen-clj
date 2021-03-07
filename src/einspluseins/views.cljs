@@ -131,6 +131,12 @@
                            :label    "Los geht's"
                            :on-click #(rf/dispatch-sync [::events/load-audio @user])]]]])))
 
+(comment
+
+  (rf/dispatch-sync [::events/load-audio "Kres"])
+
+  )
+
 ; [:pre (with-out-str (pprint @db))]
   
 (defn show-db []

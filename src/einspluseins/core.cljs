@@ -23,3 +23,10 @@
   (rf/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
   (dev-setup)
   (mount-root))
+
+(comment
+
+  ; enter shadow-repl
+  (shadow/repl :main)
+
+  )
