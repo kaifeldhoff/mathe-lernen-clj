@@ -71,7 +71,7 @@
    ]))
 
 (defn task []
-  (let [current-task (rf/subscribe [::subs/current-task])]
+  (let [current-task (rf/subscribe [::subs/current-task-display])]
     [h-box
      :size "1"
      :gap "1"

@@ -95,8 +95,72 @@
           (let [add-10th (* 10 add)]
             {:op + :n1 (+ n1 add-10th) :n2 n2})))))))
 
+(defn plus-minus-same-10th-add-10th
+  ""
+  []
+  (vec
+    (for [n1 (range 2 10)
+          n2 (range n1 (- 10 n1))]
+      (vec
+        (let [sum (+ n1 n2)
+              add-10th (* 10 (rand-nth (range 1 9)))]
+          (shuffle
+            [{:op + :n1 (+ n1 add-10th) :n2 n2}
+             {:op - :n1 (+ sum add-10th) :n2 n1}
+             {:op - :n1 (+ sum add-10th) :n2 n2}]))))))
+
+(defn plus-minus-same-10th-add-rand-10th
+  ""
+  []
+  (vec
+    (for [n1 (range 2 10)
+          n2 (range n1 (- 10 n1))]
+      (vec
+        (let [sum (+ n1 n2)
+              get-10tha #(* 10 (rand-nth (range 1 9)))]
+          (shuffle
+            [{:op + :n1 (+ n1 (get-10tha)) :n2 n2}
+             {:op - :n1 (+ sum (get-10tha)) :n2 n1}
+             {:op - :n1 (+ sum (get-10tha)) :n2 n2}]))))))
+
+(defn plus-minus-switch-10th-add-10th
+  ""
+  []
+  (vec
+    (for [n1 (range 2 10)
+          n2 (range (- 10 n1) 11)]
+      (vec
+        (let [sum (+ n1 n2)
+              add-10th (* 10 (rand-nth (range 1 9)))]
+          (shuffle
+            [{:op + :n1 (+ n1 add-10th) :n2 n2}
+             {:op - :n1 (+ sum add-10th) :n2 n1}
+             {:op - :n1 (+ sum add-10th) :n2 n2}]))))))
+
+(defn plus-minus-switch-10th-add-rand-10th
+  ""
+  []
+  (vec
+    (for [n1 (range 2 10)
+          n2 (range (- 10 n1) 11)]
+      (vec
+        (let [sum (+ n1 n2)
+              get-10tha #(* 10 (rand-nth (range 1 9)))]
+          (shuffle
+            [{:op + :n1 (+ n1 (get-10tha)) :n2 n2}
+             {:op - :n1 (+ sum (get-10tha)) :n2 n1}
+             {:op - :n1 (+ sum (get-10tha)) :n2 n2}]))))))
+
+
+
 (comment
-  (range-9-add-any-then-10th)
+
+  (for [n1 (range 2 10)
+        n2 (range (- 10 n1) 11)]
+    [n1 n2 (+ n1 n2)])
+
+
+  (plus-minus-same-10th-add-10th)
   )
 
 
@@ -108,6 +172,10 @@
                       {:to-solve 5 :create-fn range-10-19-add-1-9}
                       {:to-solve 5 :create-fn range-10-90-add-10th}
                       {:to-solve 6 :create-fn range-9-add-any-then-10th}
+                      {:to-solve 12 :create-fn plus-minus-same-10th-add-10th}
+                      {:to-solve 12 :create-fn plus-minus-same-10th-add-rand-10th}
+                      {:to-solve 12 :create-fn plus-minus-switch-10th-add-10th}
+                      {:to-solve 12 :create-fn plus-minus-switch-10th-add-rand-10th}
                       ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -116,74 +184,44 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn multi-1-and-5-range-1-5
-  "multiply 1 and 5 with range 1 to 5"
-  []
-  (vec
-   (for [n1 [1 5]
-         n2 (range 1 6)]
-     (let [[n1' n2'] (shuffle [n1 n2])]
-       [{:op * :n1 n1' :n2 n2'}]))))
-
-(defn multi-1-and-5-range-6-10
-  "multiply 1 and 5 with range 6 to 10"
-  []
-  (vec
-   (for [n1 [1 5]
-         n2 (range 6 11)]
-     (let [[n1' n2'] (shuffle [n1 n2])]
-       [{:op * :n1 n1' :n2 n2'}]))))
-
-(defn multi-1-and-5-range-1-10
-  "multiply 1 and 5 with range 1 to 10"
-  []
-  (vec
-   (for [n1 [1 5]
-         n2 (range 1 11)]
-     (let [[n1' n2'] (shuffle [n1 n2])]
-       [{:op * :n1 n1' :n2 n2'}]))))
-
-(defn multi-range-1-5
-  "multiply range 1 to 5"
-  []
-  (vec
-   (for [n1 (range 2 6)
-         n2 (range 2 6)]
-     (let [[n1' n2'] (shuffle [n1 n2])]
-       [{:op * :n1 n1' :n2 n2'}]))))
-
-(defn multi-range-6-10-no100
-  "multiply range 6 to 10 no 100"
-  []
+(defn multi-r1-up-to-r2-with-ms-no100
+  "multiply range r1 to including r2 with all ms, no 100"
+  [r1 r2 ms]
   (remove
     nil?
-    (for [n1 (range 6 11)
-          n2 (range 6 11)]
-      (let [[n1' n2'] (shuffle [n1 n2])]
-        (when-not (= 10 n1' n2')
-          [{:op * :n1 n1' :n2 n2'}])))))
-
-(defn multi-range-2-10-no100
-  "multiply range 2 to 10 no 100"
-  []
-  (remove
-    nil?
-    (for [n1 (range 2 11)
-          n2 (range 2 11)]
+    (for [n1 ms
+          n2 (range r1 (inc r2))]
       (let [[n1' n2'] (shuffle [n1 n2])]
         (when-not (= 10 n1' n2')
           [{:op * :n1 n1' :n2 n2'}])))))
 
 (comment
-  (multi-range-1-5)
+  (multi-r1-up-to-r2-with-ms-no100 6 10 [1 5])
   )
 
-(def kjell-raw-levels [{:to-solve 5 :create-fn multi-1-and-5-range-1-5}
-                       {:to-solve 5 :create-fn multi-1-and-5-range-6-10}
-                       {:to-solve 5 :create-fn multi-1-and-5-range-1-10}
-                       {:to-solve 10 :create-fn multi-range-1-5}
-                       {:to-solve 10 :create-fn multi-range-6-10-no100}
-                       {:to-solve 10 :create-fn multi-range-6-10-no100}
+(def kjell-raw-levels [{:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [1 5])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 10 [1 5])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 9 [5])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 9 [2 5])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 9 [2 3])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 9 [3 4])}
+                       {:to-solve 10 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 9 [2 3 4 5])}
+
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [4 6])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [4 8])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [3 9])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [7])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [6 9])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [7 8])}
+                       {:to-solve 10 :create-fn #(multi-r1-up-to-r2-with-ms-no100 2 5 [6 7 8 9])}
+
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [4 6])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [4 8])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [3 9])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [7])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [6 9])}
+                       {:to-solve 5 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [7 8])}
+                       {:to-solve 10 :create-fn #(multi-r1-up-to-r2-with-ms-no100 6 9 [6 7 8 9])}
                        ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -330,7 +368,7 @@
   (let [db @rfdb/app-db
         task-data (:task-data db)
         answer (:answer db)]
-    (solve task-data answer))
+    answer)
 
 
 
