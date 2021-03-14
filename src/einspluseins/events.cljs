@@ -1,13 +1,13 @@
 (ns einspluseins.events
   (:require
    [re-frame.core :as rf]
-   #_[re-frame.db :as rfdb]
+   [re-frame.db :as rfdb]
    #_[day8.re-frame.http-fx]
    #_[cljs-bach.synthesis :as bach]
    #_[ajax.core :as ajax]
    #_[day8.re-frame.tracing :refer-macros [fn-traced defn-traced]]
    [einspluseins.db :refer [default-db]]
-   [einspluseins.tasks :refer [levels-per-user commit-solution]]
+   [einspluseins.tasks :as tasks]
    [einspluseins.audio :as audio]
    ))
 
@@ -26,6 +26,7 @@
  ::add-digit
  (fn [db [_ digit]]
    (let [old-answer (db :answer)
+         ; TODO: Get by user
          max-answer-digits (db :max-answer-digits)]
      (if (> max-answer-digits (count old-answer))
        (let [new-answer (str old-answer digit)]
@@ -41,23 +42,30 @@
  ::commit-solution
  [clear-answer]
  (fn [db _]
-   (commit-solution db)))
+   (if (:complete db)
+     db
+     (assoc db :task-data (tasks/solve (:task-data db) (:answer db))))))
 
 (rf/reg-event-db
- ::load-audio
+ ::init-audio-and-set-user
  (fn [db [_ username]]
    (let [user (keyword username)
-         levels-of-user (levels-per-user user)
-         level 1
-         {:keys [:to-solve :create-fn]} (levels-of-user level)
-         tasks (shuffle (create-fn))
-         db (-> db
-                (assoc :audio (audio/load-audio))
-                (assoc :show-start-modal false)
-                (assoc :current-user user)
-                (assoc :levels levels-of-user)
-                (assoc-in [:remaining-tasks level] tasks)
-                (assoc :to-solve to-solve))]
-     #_(audio/play-try-again (:audio db))
-     #_(audio/play-applause (:audio db))
-     db)))
+         level-data (tasks/init-with-user user)]
+     (-> db
+         (assoc :audio (audio/load-audio))
+         (assoc :show-start-modal false)
+         (assoc :task-data level-data)))))
+
+(comment
+
+  (let [db @rfdb/app-db]
+    db #_(get-in db [:answer]))
+
+  (swap! rfdb/app-db assoc-in [:task-data :current-task] nil)
+
+  (rf/dispatch-sync [::commit-solution])
+
+  (rf/dispatch-sync [::add-digit "8"])
+
+
+  )

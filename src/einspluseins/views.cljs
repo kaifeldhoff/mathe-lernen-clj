@@ -72,13 +72,11 @@
 
 (defn task []
   (let [current-task (rf/subscribe [::subs/current-task])]
-    (if-not (nil? @current-task)
-      [h-box
-       :size "1"
-       :gap "1"
-       :children (for [part @current-task]
-                   [box :child part :style {:font-size "25vh"}])]
-      [box :child "FERTIG!" :style {:font-size "20vh"}])))
+    [h-box
+     :size "1"
+     :gap "1"
+     :children (for [part @current-task]
+                 [box :child part :style {:font-size "25vh"}])]))
 
 (defn solution []
   (let [answer (rf/subscribe [::subs/current-answer])]
@@ -119,7 +117,7 @@
                :children [[label :label "Wer bist Du?"]
                           [gap :size "20px"]
                           (doall
-                           (for [u ["Kilian" "Kjell" "Kres"]]
+                           (for [u [#_"Kilian" "Kjell" "Kres"]]
                              ^{:key u}
                              [radio-button
                               :label u
@@ -129,13 +127,33 @@
                           [gap :size "20px"]
                           [button
                            :label    "Los geht's"
-                           :on-click #(rf/dispatch-sync [::events/load-audio @user])]]]])))
+                           :on-click #(rf/dispatch-sync [::events/init-audio-and-set-user @user])]]]])))
 
 (comment
 
-  (rf/dispatch-sync [::events/load-audio "Kres"])
+  @(rf/subscribe [::subs/db])
+
+  (rf/dispatch-sync [::events/initialize-db])
+  (rf/dispatch-sync [::events/init-audio-and-set-user "Kres"])
 
   )
+
+#_(defn main-panel []
+  (let [complete (rf/subscribe [::subs/complete])]
+    (when-not false #_@complete
+      [h-box
+       :size "20"
+       :children [[h-box
+                   :size "1"
+                   :justify :center
+                   :children [[to-solve]]]
+                  [h-box
+                   :size "1"
+                   :justify :center
+                   :align :center
+                   :children [[numpad]]]]]
+      [show-progress-bar]
+      [gap :size "1"])))
 
 ; [:pre (with-out-str (pprint @db))]
   
@@ -144,7 +162,14 @@
     [:pre 
      (with-out-str (pprint (dissoc @db :re-pressed.core/keydown)))]))
 
-(defn main-panel []
+(comment
+
+  (-> @(rf/subscribe [::subs/db])
+      :complete)
+
+  )
+
+(defn main-component []
   (dispatch-keydown-rules)
   [v-box
    :height "100vh"
@@ -164,58 +189,3 @@
               [show-progress-bar]
               [gap :size "1"]]])
 
-#_(def selected-range (reagent.core/atom "10"))
-#_(defn range-select []
-  [v-box
-   :size "1"
-   :children [(doall
-               (for [r ["10" "20" "99"]]
-                 ^{:key r}
-                 [radio-button
-                  :label       r
-                  :value       r
-                  :model       selected-range
-                  :on-change   #(reset! selected-range %)]))]])
-
-#_(defonce selected-plus (reagent.core/atom false))
-#_(defonce selected-minus (reagent.core/atom false))
-#_(defonce selected-times (reagent.core/atom false))
-#_(defonce selected-divide (reagent.core/atom false))
-
-#_(defn ops-select []
-  [v-box
-   :size "1"
-   :children [[checkbox
-               :label       '+
-               :model       selected-plus
-               :disabled?   (or @selected-times @selected-divide)
-               :on-change   #(reset! selected-plus %)]
-              [checkbox
-               :label       '-
-               :model       selected-minus
-               :disabled?   (or @selected-times @selected-divide)
-               :on-change   #(reset! selected-minus %)]
-              [checkbox
-               :label       '*
-               :model       selected-times
-               :disabled?   (or @selected-plus @selected-minus)
-               :on-change   #(reset! selected-times %)]
-              [checkbox
-               :label       '/
-               :model       selected-divide
-               :disabled?   (or @selected-plus @selected-minus)
-               :on-change   #(reset! selected-divide %)]]])
-
-
-#_(defn main-panel []
-  [v-box
-   :height "100vh"
-   :justify :center
-   :children [[h-box
-               :align :center
-               :children [[gap :size "5"]
-                          [range-select]
-                          [gap :size "1"]
-                          [ops-select]
-                          [gap :size "5"]]
-               ]]])

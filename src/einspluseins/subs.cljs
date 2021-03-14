@@ -1,6 +1,7 @@
 (ns einspluseins.subs
   (:require [re-frame.core :as rf]
-            [einspluseins.tasks :refer [levels-per-user task->str]]
+            [re-frame.db :as rfdb]
+            [einspluseins.tasks :as tasks]
             #_[cljs.pprint :as pprint]))
 
 (rf/reg-sub
@@ -12,31 +13,26 @@
      (quot (* (+ value 0.5) 10) 10))))
 
 (rf/reg-sub
- ::current-task
- :<- [::remaining-tasks-all-levels]
- :<- [::current-level]
- (fn [[remaining-tasks-all-levels current-level] _]
-   (let [remaining-task-lists-of-level (remaining-tasks-all-levels current-level)
-         actual-task-list (peek remaining-task-lists-of-level)]
-     (when-let [task (peek actual-task-list)]
-       (task->str task)))))
-
-(rf/reg-sub
  ::total-tasks
  :<- [::current-level]
- :<- [::levels]
- (fn [[current-level levels] _]
-   (get-in levels [current-level :to-solve])))
+ :<- [::level-data]
+ (fn [[current-level level-data] _]
+   (tasks/get-to-solve-of-level {:current-level current-level
+                                 :level-data level-data})))
+
+(rf/reg-sub
+  ::current-task-display
+  :<- [::current-task]
+  :<- [::complete]
+  (fn [[current-task complete] _]
+    (if complete
+      "FERTIG"
+      (or current-task "..."))))
 
 (rf/reg-sub
  ::remaining-to-solve
  (fn [db]
-   (db :to-solve)))
-
-(rf/reg-sub
- ::remaining-tasks-all-levels
- (fn [db]
-   (db :remaining-tasks)))
+   (-> db :task-data :current-to-solve)))
 
 (rf/reg-sub
  ::current-answer
@@ -44,14 +40,25 @@
    (db :answer)))
 
 (rf/reg-sub
- ::current-level
- (fn [db]
-   (db :current-level)))
+  ::current-task
+  (fn [db]
+    (when-let [current-task (-> db :task-data :current-task)]
+      (tasks/task->str current-task))))
 
 (rf/reg-sub
- ::levels
+ ::current-level
  (fn [db]
-   (db :levels)))
+   (-> db :task-data :current-level)))
+
+(rf/reg-sub
+ ::level-data
+ (fn [db]
+   (-> db :task-data :level-data)))
+
+(rf/reg-sub
+  ::complete
+  (fn [db]
+    (-> db :task-data :complete)))
 
 (rf/reg-sub
  ::show-start-modal
@@ -65,6 +72,33 @@
 
 (comment
 
-   
+  (let [db @rfdb/app-db]
+    (get-in db [:task-data :current-task]))
+
+  (swap! rfdb/app-db assoc-in [:task-data :current-task] nil)
+
+  (swap! rfdb/app-db assoc-in [:task-data :complete] true)
+
+  @(rf/subscribe [::progress])
+
+  @(rf/subscribe [::total-tasks])
+
+  @(rf/subscribe [::current-task-display])
+
+  @(rf/subscribe [::remaining-to-solve])
+
+  @(rf/subscribe [::current-task])
+
+  @(rf/subscribe [::current-level])
+
+  @(rf/subscribe [::level-data])
+
+  @(rf/subscribe [::complete])
+
+  @(rf/subscribe [::show-start-modal])
+
+  (-> @(rf/subscribe [::show-start-modal])
+      :task-data
+      #_:complete)
   
   )

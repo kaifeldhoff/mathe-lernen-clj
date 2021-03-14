@@ -2,13 +2,10 @@
 
 (def default-db
   {:show-start-modal true
-   :current-user nil
    :answer ""
+   :task-data nil
+   ; TODO: set by user from task-data
    :max-answer-digits 2
-   :remaining-tasks {}
-   :to-solve 0
-   :current-level 1
-   :levels nil
    :audio {}
    }
   )
