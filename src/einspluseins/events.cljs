@@ -11,6 +11,11 @@
    [einspluseins.audio :as audio]
    ))
 
+(rf/reg-event-fx
+ ::set-active-page
+ (fn [{:keys [db]} [_ {:keys [page]}]]
+   {:db (assoc db :active-page page)}))
+
 (def clear-answer
   (rf/->interceptor
    :id      :clear-answer
@@ -52,6 +57,7 @@
    (let [user (keyword username)
          level-data (tasks/init-with-user user)]
      (-> db
+         (assoc :active-page :play)
          (assoc :audio (audio/load-audio))
          (assoc :show-start-modal false)
          (assoc :task-data level-data)))))

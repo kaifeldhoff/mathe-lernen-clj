@@ -5,6 +5,11 @@
             #_[cljs.pprint :as pprint]))
 
 (rf/reg-sub
+ ::active-page
+ (fn [db _]
+   (:active-page db)))
+
+(rf/reg-sub
  ::progress
  :<- [::remaining-to-solve]
  :<- [::total-tasks]

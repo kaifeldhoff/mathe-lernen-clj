@@ -105,10 +105,8 @@
                  :model @ratio
                  :width "80vw"]]]))
 
-(defn start-modal []
-  (let [show (rf/subscribe [::subs/show-start-modal])
-        user (reagent/atom "Kilian")]
-    (when @show
+(defn select-user-view []
+  (let [user (reagent/atom "Kjell")]
       [modal-panel
        ; :backdrop-on-click #()
        :child [v-box
@@ -127,7 +125,7 @@
                           [gap :size "20px"]
                           [button
                            :label    "Los geht's"
-                           :on-click #(rf/dispatch-sync [::events/init-audio-and-set-user @user])]]]])))
+                           :on-click #(rf/dispatch-sync [::events/init-audio-and-set-user @user])]]]]))
 
 (comment
 
@@ -138,22 +136,33 @@
 
   )
 
-#_(defn main-panel []
+(defn play-view []
   (let [complete (rf/subscribe [::subs/complete])]
-    (when-not false #_@complete
-      [h-box
-       :size "20"
-       :children [[h-box
-                   :size "1"
-                   :justify :center
-                   :children [[to-solve]]]
-                  [h-box
-                   :size "1"
-                   :justify :center
-                   :align :center
-                   :children [[numpad]]]]]
-      [show-progress-bar]
-      [gap :size "1"])))
+    [v-box
+     :height "100vh"
+     :children [(when @complete
+                  [modal-panel
+                   :child [v-box
+                           :width    "300px"
+                           :align :center
+                           :children [[label :label "Super!!!"]
+                                      [gap :size "20px"]
+                                      [button
+                                       :label    "Nochmal!"
+                                       :on-click #(rf/dispatch-sync [::events/set-active-page :select-user])]]]])
+                [h-box
+                 :size "20"
+                 :children [[h-box
+                             :size "1"
+                             :justify :center
+                             :children [[to-solve]]]
+                            [h-box
+                             :size "1"
+                             :justify :center
+                             :align :center
+                             :children [[numpad]]]]]
+                [show-progress-bar]
+                [gap :size "1"]]]))
 
 ; [:pre (with-out-str (pprint @db))]
   
@@ -165,27 +174,18 @@
 (comment
 
   (-> @(rf/subscribe [::subs/db])
-      :complete)
+      #_:active-page)
 
   )
 
-(defn main-component []
-  (dispatch-keydown-rules)
-  [v-box
-   :height "100vh"
-   :children [#_[show-db]
-              [start-modal]
-              [h-box
-               :size "20"
-               :children [[h-box
-                           :size "1"
-                           :justify :center
-                           :children [[to-solve]]]
-                          [h-box
-                           :size "1"
-                           :justify :center
-                           :align :center
-                           :children [[numpad]]]]]
-              [show-progress-bar]
-              [gap :size "1"]]])
+(defn pages [page-name]
+  (case page-name
+    :select-user [select-user-view]
+    :play [play-view]
+    [select-user-view]))
 
+(defn app []
+  (dispatch-keydown-rules)
+  (let [active-page @(rf/subscribe [::subs/active-page])]
+    [:div
+     [pages active-page]]))
