@@ -1,5 +1,6 @@
 (ns einspluseins.events
   (:require
+   [clojure.string :as str]
    [re-frame.core :as rf]
    [re-frame.db :as rfdb]
    #_[day8.re-frame.http-fx]
@@ -47,7 +48,7 @@
  ::commit-solution
  [clear-answer]
  (fn [db _]
-   (if (:complete db)
+   (if (or (:complete db) (str/blank? (:answer db)))
      db
      (assoc db :task-data (tasks/solve (:task-data db) (:answer db))))))
 
