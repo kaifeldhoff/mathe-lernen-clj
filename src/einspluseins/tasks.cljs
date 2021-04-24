@@ -28,13 +28,22 @@
       (let [[n1 n2] (shuffle [n 1])]
         [{:op + :n1 n1 :n2 n2}]))))
 
-(defn range-10-sub-1
-  "Subtract 1 from any number from 2-10"
-  []
-  (let [max-int 10]
-    (for [n1 (range 2 (inc max-int))]
-      (let [n2 (rand-nth [(dec n1) 1])]
-        [{:op - :n1 n1 :n2 n2}]))))
+(defn range-10-add-sub-ns
+  "Add and subtract n from any number range 10"
+  [ns]
+  (for [n ns
+        n1 (range 1 (- 11 n))]
+    (let [n2 n
+          sum (+ n1 n2)]
+      [{:op - :n1 sum :n2 n2}
+       {:op + :n1 n1 :n2 n2}])))
+
+(comment
+
+  (map #(+ 2 %) (range 1 9))
+
+  (range-10-add-sub-ns [7 8 ])
+  )
 
 (defn range-10-add-any
   "Add any two number with result <=10"
@@ -165,7 +174,15 @@
 
 
 (def kres-raw-levels [{:to-solve 5 :create-fn range-10-add-1}
-                      {:to-solve 5 :create-fn range-10-sub-1}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [1])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [2])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [3])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [4])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [5])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [5 6])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [6 7])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [7 8])}
+                      {:to-solve 5 :create-fn #(range-10-add-sub-ns [7 8 9])}
                       {:to-solve 5 :create-fn range-10-add-any}
                       {:to-solve 5 :create-fn range-11-20-add-0-9+10}
                       {:to-solve 6 :create-fn range-11-20-add-1-9-then+1}
